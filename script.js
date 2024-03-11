@@ -1,66 +1,66 @@
 document.addEventListener("DOMContentLoaded", function() {
-  let currentSlide = 0;
-  let autoSlideInterval; // Variável para armazenar o intervalo da troca automática de slides
-  const slides = document.querySelectorAll('.slide');
-  const totalSlides = slides.length;
-  const buttons = document.querySelectorAll('.manual-btn');
+    let currentSlide = 0;
+    let startX = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let autoSlideInterval;
 
-  function showSlide(index) {
-    slides.forEach((slide, i) => {
-      slide.style.display = i === index ? 'block' : 'none';
+    const radioButtons = document.querySelectorAll('input[name="radio-btn"]');
+
+    // Adicionando evento de clique para cada botão de rádio
+    radioButtons.forEach((radioBtn, index) => {
+        radioBtn.addEventListener('click', function() {
+            clearInterval(autoSlideInterval); // Limpa o intervalo atual
+            currentSlide = index;
+            showSlide(currentSlide);
+            startAutoSlide(); // Reinicia o avanço automático do slide
+        });
     });
-    // Se o slide atual for o último e for um vídeo, reproduza-o
-    if (index === totalSlides - 1 && slides[index].querySelector('video')) {
-      const video = slides[index].querySelector('video');
-      video.play();
-      // Defina um temporizador para pausar o vídeo após 30 segundos
-      setTimeout(function() {
-        video.pause();
-        nextSlide(); // Avança para o próximo slide após 30 segundos
-      }, 30000); // Tempo em milissegundos (30 segundos)
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.style.display = i === index ? 'block' : 'none';
+        });
     }
-    // Adiciona a classe 'active' ao botão correspondente
-    buttons.forEach((btn, i) => {
-      btn.classList.remove('active');
-      if (i === index) {
-        btn.classList.add('active');
-      }
-    });
-  }
 
-  function nextSlide() {
-    currentSlide = (currentSlide + 1) % totalSlides;
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        showSlide(currentSlide);
+    }
+
+    function startAutoSlide() {
+        clearInterval(autoSlideInterval); // Limpa o intervalo atual
+        autoSlideInterval = setInterval(nextSlide, 5000); // Define o intervalo para avanço automático
+    }
+
+    // Adicionando detecção de eventos de toque para dispositivos móveis
+    document.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+    });
+
+    document.addEventListener('touchend', function(e) {
+        const endX = e.changedTouches[0].clientX;
+        const diffX = startX - endX;
+
+        if (Math.abs(diffX) > 50) {
+            if (diffX > 0) {
+                // Deslizou para a esquerda
+                nextSlide();
+            } else {
+                // Deslizou para a direita
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                showSlide(currentSlide);
+            }
+            clearInterval(autoSlideInterval); // Limpa o avanço automático
+            startAutoSlide(); // Reinicia o avanço automático do slide
+        }
+    });
+
+    // Mostra o primeiro slide e inicia o avanço automático
     showSlide(currentSlide);
-  }
-  
-  function prevSlide() {
-    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-    showSlide(currentSlide);
-  }
+    startAutoSlide();
+});
 
-  // Mostra a primeira imagem
-  showSlide(currentSlide);
-
-  // Intervalo para trocar de slide a cada 5 segundos (5000ms)
-  autoSlideInterval = setInterval(nextSlide, 5000);
-
-  // Pausar a troca automática de slides enquanto o vídeo estiver sendo reproduzido
-  document.querySelectorAll('.slide video').forEach(video => {
-    video.addEventListener('play', function() {
-      clearInterval(autoSlideInterval);
-    });
-    video.addEventListener('pause', function() {
-      autoSlideInterval = setInterval(nextSlide, 5000);
-    });
-  });
-
-  // Adicionando funcionalidade de troca manual
-  buttons.forEach((btn, index) => {
-    btn.addEventListener('click', function() {
-      currentSlide = index;
-      showSlide(currentSlide);
-    });
-  });
 
   // Adicionando funcionalidade de troca manual anterior
   document.querySelector('#prevSlide').addEventListener('click', function() {
